@@ -1,0 +1,17 @@
+1. EC2 -> Create instance 
+
+2. ssh to it through local Ubuntu
+ sudo apt update
+ sudo apt insatll stress
+ stress -c 10 
+ # This option specifies the number of worker threads to create. In this case, it's set to 10, meaning that the stress tool will create 10 worker threads that perform computations to stress the CPU.
+   
+
+3. EC2 -> Connect -> EC2 Instance Connect -> Connect
+It will open linux console in browser
+top
+# we can see running threads on the CPU and that the load is 99% or 100%
+
+4. CloudWatch -> Dashboards -> Create Dashboard -> 
+Add widget -> Lines -> Choose the ec2 by id -> choose metric CPUUtilization 
+Time interval 1h or 3h

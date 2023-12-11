@@ -1,0 +1,24 @@
+1. S3 -> Create lus-s3 bucket
+   Enable versioning
+   Create init folder, upload 2 files inside
+
+2. S3 -> Create lus-replica bucket
+  Enable versioning
+
+3. S3 -> lus-s3 -> Management -> Repilcation Rule
+name = replica-rule-lus
+source = lus-s3
+rule scope = Apply to all objects in the bucket
+destination = Choose a bucket in this account 
+              lus-replica
+
+IAM role = Choose from existing roles
+create new role
+
+4. S3 -> lus-s3 -> upload mac.txt file
+go to properties -> make sure the replication rule is there and enabled
+
+5. wait for 1 minute
+
+6. S3 -> lus-replica -> Make sure the max.txt file appears also here
+

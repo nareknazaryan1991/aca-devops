@@ -1,0 +1,143 @@
+Homework: 
+- Generate Lets-encrypt certificate for the domain
+- Import certificate to AWS
+- Use uploaded certificate for CF distribution
+
+
+Precondition: 
+- I have s3 bucket with statis website hosting enabled
+http://lusine-avanesyan.devopsaca.site.s3-website-us-east-1.amazonaws.com/
+- I have CloudFront created based on s3 bucket an origin
+http://d1c2w5ld7eyuv5.cloudfront.net/
+It opens my index.html with "Bareev web page" content.
+Purpose: Need a new certificate for lusine-avanesyan.devopsaca.site domain to set it for CloudFont.
+
+
+Solution in steps:
+1. EC2 -> Launch an ec2 instance with Ubuntu 22.04 with a key-pair for login
+2. Local Ubuntu -> SSH to ec2
+ssh -i lus-key.pem ubuntu@ec2-3-21-75-9.us-east-2.compute.amazonaws.com
+3. Remotely connected to EC2
+- sudo apt update
+- sudo apt install nginx
+- cd /var/www/html/index.nginx-debian.html
+- sudo vim index..nginx-debian.html
+and write something specific, for example Barev Welcome page
+- sudo systemctl start nginx
+- sudo nginx -s reload
+
+4. EC2 -> Security Groups -> Inbound Rules
+Add inbound rule for 80 port as this is the default port for nginx
+
+5. Make sure the webpage is opened under
+http://3.21.75.9/
+
+6. Route53 -> Add A Record for lusine-avanesyan.devopsaca.site to refer to 3.21.75.9
+
+7. EC2 -> nginx configuration -> set server name to lusine-avanesyan.devopsaca.site
+- sudo vim /var/nginx/sites-enabled/default
+changed default _ as servername to the new domain:
+
+server_name lusine-avanesyan.devopsaca.site;
+
+8. Make sure the nginx website opens the page under
+http://lusine-avanesyan.devopsaca.site/
+
+
+9. Now we will request a certificate from Let's Encypt by certbot for specific domain lusine-avanesyan.devopsaca.site that will work with server 3.21.75.9
+
+- sudo apt install certbot
+- sudo certbot certonly --manual -d lusine-avanesyan.devopsaca.site
+
+
+Requesting a certificate for lusine-avanesyan.devopsaca.site
+
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+Create a file containing just this data:
+
+GHmr9t0i2G1fxStkR9nEkWLaohPfuP40kCAAWyhUGTU.NABySrDf_hQWq50eBkMHokEmo4yE5AWzsTygVmvWvTU
+
+And make it available on your web server at this URL:
+
+http://lusine-avanesyan.devopsaca.site/.well-known/acme-challenge/GHmr9t0i2G1fxStkR9nEkWLaohPfuP40kCAAWyhUGTU
+
+Left this part opened... Will get back to it when I will preapre the appropriate folders and make it available with the file inside.
+
+10. EC2 -> Connect -> Opened Linux console in browser
+https://us-east-2.console.aws.amazon.com/ec2-instance-connect/ssh?connType=standard&instanceId=i-084365259eba6fc1e&osUser=ubuntu&region=us-east-2&sshPort=22#/
+
+- cd /var/www/html/
+
+ubuntu@ip-172-31-35-116:/var/www/html$ sudo mkdir .well-known/acme-challenge
+ubuntu@ip-172-31-35-116:/var/www/html$ sudo touch .well-known/acme-challenge/GHmr9t0i2G1fxStkR9nEkWLaohPfuP40kCAAWyhUGTU
+ubuntu@ip-172-31-35-116:/var/www/html$ sudo vim .well-known/acme-challenge/GHmr9t0i2G1fxStkR9nEkWLaohPfuP40kCAAWyhUGTU
+
+11. After that, get back and click Continue on ec2 ssh connected computer. It gives the certificates like this:
+
+Successfully received certificate.
+Certificate is saved at: /etc/letsencrypt/live/lusine-avanesyan.devopsaca.site/fullchain.pem
+Key is saved at:         /etc/letsencrypt/live/lusine-avanesyan.devopsaca.site/privkey.pem
+This certificate expires on 2024-02-28.
+These files will be updated when the certificate renews.
+
+
+12. As the certificate files are in a protected folder, we need to login as root user. 
+- sudo -i
+- cd /etc/letsencrypt/live/lusine-avanesyan.devopsaca.site/
+- ls
+
+and we can see the certificate files here
+/etc/letsencrypt/live/lusine-avanesyan.devopsaca.site# ls
+README  cert.pem  chain.pem  fullchain.pem  privkey.pem
+
+13. AWS Certificate Manager -> Import certificate
+13a) cat cert.pem
+     and copy the key into -> Certificate body
+13b) cat privkey.pen
+     and copy the key into -> Certificate Private key
+13c) cat fullchain.pem
+     and copy the key into -> Certificate Chain
+
+Click next->next
+And then make sure the certificate is shown in the list of certificated as Issued.
+
+14. Now, I need to uninstall nginx server on ec2, and use this certificate for cloudFrount distribution based on s3 origin. Actually, I will terminate the nginx server.
+
+EC2 -> Terminate instance
+
+15. Route53 -> Delete previous A record referring to ec2
+Create new A record
+
+
+16. CouldFrount -> Distribution -> Settings -> Edit
+Alternative domain name = lusine-avanesyan.devopsaca.site
+Choose certificate = the Let's Encrypt certificate
+Save changes
+
+
+17. Route53 -> Create new A record
+Alias to CouldFrount distribution
+Selecte lusine-avanesyan.devopsaca.site
+
+18. Wait for a minute until the propogation happens for DNS
+Make sure the https website is opened like this:
+
+https://lusine-avanesyan.devopsaca.site/
+
+Result: 
+- It opens my index.html with "Bareev web page" content. This is the statis website delivered with CloudFront based on s3 origin, and now available with appropriate domain and with SSL certificate.
+- To make sure the certificate is correct. Click on https padlock -> Connection is Secure -> Cetificate is valid
+and make sure you see that
+
+
+Common Name (CN)	lusine-avanesyan.devopsaca.site
+Organization (O)	<Not Part Of Certificate>
+Organizational Unit (OU)	<Not Part Of Certificate>
+Common Name (CN)	R3
+Organization (O)	Let's Encrypt
+Organizational Unit (OU)	<Not Part Of Certificate>
+Issued On	Thursday, November 30, 2023 at 2:17:59 PM
+Expires On	Wednesday, February 28, 2024 at 2:17:58 PM
+Certificate	2c4d13bf2fd0a5fae2017546be123105c603690d026ef3b0932e56ae28989ed2
+Public Key	abdd45fc171e87eeb2e14e74fbc8a8df8d382bda0011e626038161ea880fda7b
+

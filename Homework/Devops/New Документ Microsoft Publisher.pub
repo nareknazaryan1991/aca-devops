@@ -1,0 +1,36 @@
+1) PC
+	 C:\Windows\System32\drivers\etc ->  hosts ->  192.168.237.6    aca.example.com  (webserver IP)
+
+2) webserver
+	2.1) sites-enabeled ->  rm default
+
+	2.2) /etc/nginx/conf.d/ -> touch aca.example.com.conf
+
+	2.3) vim aca.example.com.conf ->
+
+		upstream myapp1 {
+        server 192.168.237.5:80;
+        server 192.168.237.3:80;
+}
+server {
+        listen 80 default_server;
+        listen [::]:80 default_server;
+        location / {
+                   proxy_pass http://myapp1;
+        }
+}
+
+3) web1 and web2
+
+	3.1) cd /var/www/html/ -> touch index.html -> vim index.html
+	
+	3.2) <!DOCTYPE html>	
+	     <html>
+	     <head>
+    		 <title>My Nginx Website</title>
+	     </head>
+	     <body>
+    		 <h1>Hello, World web-server-1</hi>
+	     </body>
+	     </html>
+

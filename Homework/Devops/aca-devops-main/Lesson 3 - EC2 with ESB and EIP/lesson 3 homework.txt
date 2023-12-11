@@ -1,0 +1,86 @@
+lesson 3 homework
+
+1. AWS EC2 -> Select Region -> Launch instance
+2. Name = lus-ec2-vm
+3. OS, AMI = Ubuntu 22.04
+   t2.micro
+4. Key pair (login) = created lus-key pair and downloaded lus-key.pem into my windows 
+5. Copied this lus-key.pem into my ubunto WSL vm, appropriate folder
+6. Network settings
+Create security group
+Allow SSH traffic from
+7. Configure storage
+1x8 GiB gp2
+8. click on Launch instance button below
+9. go to Instances, wait until the instance is up and have instance state "Running"
+10. go to instance -> security groups -> add inbound rules for 443 https and 80 TCP ports with CIDR 0.0.0.0/0
+
+11. from my WSL ubuntu, ssh to remote vm
+ ssh -i lus-key.pem ubuntu@ec2-35-181-152-217.eu-west-3.compute.amazonaws.com
+12. install nginx on remove vm
+sudo apt install
+sudo apt install nginx
+sudo apt install nginx --fix-missing
+sudo systemctl status nginx
+sudo nginx -s reload
+13. Check that nginx is working properly, from my windows, chromw browser, type public IP of aws ec2
+http://35.181.152.217/
+should open nginx default html page
+
+14. go to Elastic Block Store -> Volumes -> Create Volume
+select gp2, select the same Size as the instance, eu-west-3c
+
+15. from my WSL, where I'm ssh connected to aws ec2, check the disks
+ lsblk
+
+ubuntu@ip-172-31-44-89:~$ lsblk
+NAME     MAJ:MIN RM   SIZE RO TYPE MOUNTPOINTS
+loop0      7:0    0  24.6M  1 loop /snap/amazon-ssm-agent/7528
+loop1      7:1    0  55.7M  1 loop /snap/core18/2790
+loop2      7:2    0  63.5M  1 loop /snap/core20/2015
+loop3      7:3    0 111.9M  1 loop /snap/lxd/24322
+loop4      7:4    0  40.8M  1 loop /snap/snapd/20092
+xvda     202:0    0     8G  0 disk
+├─xvda1  202:1    0   7.9G  0 part /
+├─xvda14 202:14   0     4M  0 part
+└─xvda15 202:15   0   106M  0 part /boot/efi
+
+16. from aws, EC2, stop current instance
+17. from aws, EBS, select the new volume, attach to the instance that was stopped
+
+18. on my wsl
+ubuntu@ip-172-31-44-89:~$ Connection to ec2-35-181-152-217.eu-west-3.compute.amazonaws.com closed by remote host.
+Connection to ec2-35-181-152-217.eu-west-3.compute.amazonaws.com closed.
+
+19. start ec2 instance, the public IP should be changed
+20. do ssh to this instance
+ ssh -i lus-key.pem ubuntu@ec2-35-181-44-196.eu-west-3.compute.amazonaws.com
+
+21. and check the disks by lsblk
+
+ubuntu@ip-172-31-44-89:~$ lsblk
+NAME     MAJ:MIN RM   SIZE RO TYPE MOUNTPOINTS
+loop0      7:0    0  24.6M  1 loop /snap/amazon-ssm-agent/7528
+loop1      7:1    0  55.7M  1 loop /snap/core18/2790
+loop2      7:2    0  63.5M  1 loop /snap/core20/2015
+loop3      7:3    0 111.9M  1 loop /snap/lxd/24322
+loop4      7:4    0  40.8M  1 loop /snap/snapd/20092
+xvda     202:0    0     8G  0 disk
+├─xvda1  202:1    0   7.9G  0 part /
+├─xvda14 202:14   0     4M  0 part
+└─xvda15 202:15   0   106M  0 part /boot/efi
+xvdf     202:80   0     5G  0 disk
+
+Notice that the 5Gb disk is added at the very end.
+
+22. aws -> Elastic IPs -> Allocate Elastic IP address
+23. select EIP, assosiate it with existing instance
+24. from wsl, connect to this instance with new public IP
+ssh -i lus-key.pem ubuntu@ec2-13-39-31-170.eu-west-3.compute.amazonaws.com
+25. now stop the instance, then start, the IP will not change
+
+26. terminate the ec2 instance
+27. delete EBS elastic block store 5GiB volume
+28. release EIP elastic ip address 
+
+
