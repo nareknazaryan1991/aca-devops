@@ -94,21 +94,21 @@ http {
 3.1 Build the image and push it to Docker Hub:
 
  # Build the Docker image
-sudo docker build -t nginx:latest .
+sudo docker build -t narek:latest .
 
 3.2 Push the image to Docker Hub:
  # Log in to Docker Hub
 sudo docker login
 
  # Push the image to your Docker Hub repository (replace 'your_username' and 'image_name')
-sudo  docker tag nginx:latest narek1991/nginx-custom:latest
+sudo  docker tag narek:latest narek1991/nginx-custom:latest
 sudo docker push narek1991/nginx-custom:latest
 
 
 [ 4. Run a container from the created Dockerfile: ???
 
 # Run a container from the image you pushed (replace 'your_username' and 'image_name')
-sudo docker run -d -p 80:80 your_username/image_name ]
+sudo docker run -d -p 80:80 narek1991/nginx-custom:latest ]
 
 5. "Login" to the container, install and run the htop command:
 
