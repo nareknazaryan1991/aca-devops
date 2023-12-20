@@ -1,0 +1,108 @@
+Homework:
+Install docker on ec2 ubuntu
+Write Dockerfile for ubuntu latest image, nginx installed and simple nginx conf file added to enabled sites directory.
+Build the image
+Run a container from created dockerfile
+"Login" to conrainer, install and run htop command
+
+
+Solution:
+1. aws -> ec2 -> Launch instance
+
+2. Install docker
+
+$ sudo apt update
+$ sudo apt install docker.io
+
+3. Create repository app folder, and inside, the index.html file, myconf.conf file and Dockerfile.
+
+$ mkdir narek_prof -> cd narek_prof
+
+$ touch my.conf
+$ touch Dockerfile
+
+
+4. Write content of myconf.conf
+
+$ vim myconf.conf
+
+server {
+  listen 80;
+  server_name _;
+
+  root /var/www/html;
+
+  index index.html index.htm index.nginx-debian.html;
+
+  location / {
+     try_files $uri $uri/ =404;
+  }
+}
+
+
+5. Write content of Dockerfile
+
+$ vim Dockerfile
+
+FROM ubuntu:latest
+
+# Install nginx
+RUN apt-get update && apt-get install -y nginx
+
+# Substitute default conf file with mine and add the main applicaton html file
+RUN rm -f /etc/nginx/sites-enabled/default
+COPY my.conf /etc/nginx/sites-enabled/
+
+# Expose port 80
+EXPOSE 80
+
+# Start Nginx when the container starts
+CMD ["nginx", "-g", "daemon off;"]
+
+
+6. Make Docker image
+
+$ sudo docker build -t narekweb:1.0 ~/Doker_test/narek_prof
+$ sudo docker images
+
+7. Run docker container
+
+$ sudo docker run --name mycont1 -d -p 8000:80 narekweb:1.0
+$ sudo docker ps
+
+
+
+8. ec2 -> Security -> Security Group -> Add Inbound Rule
+
+Custom TCP 8000 to 0.0.0.0/0
+Custom TCP 80 to  0.0.0.0/0
+
+11. Open the browser to check
+
+http://54.147.4.4:8000
+Make sure you see a white page with a text "Welcome to NGINX".
+
+12. Push the image to Docker Hub:
+
+# Log in to Docker Hub
+$ sudo docker login
+
+13. Push the image to your Docker Hub
+
+# Push the image to your Docker Hub repository (replace 'your_username' and 'image_name')
+
+$ sudo  docker tag narekweb:1.0 narek1991/nginx-custom:latest
+$ sudo docker push narek1991/nginx-custom:latest
+
+14. Run htop in container
+
+$ sudo docker exec -it mycont /bin/bash
+$ sudo apt install htop
+$ sudo htop
+
+# Troubleshooting
+sudo apt install net-tools
+sudo net-stat -nltp
+sudo docker system prune -a
+docker exec -it lus nginx -t
+docker inspect lus
