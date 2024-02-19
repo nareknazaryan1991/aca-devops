@@ -1,0 +1,69 @@
+---
+- name: Create Amazon Machine Image (AMI) with Ansible
+  hosts: localhost
+  gather_facts: false
+  vars:
+    aws_region: "us-east-1"
+    aws_account_id: "099720109477"
+    instance_type: "t2.micro"
+    ssh_username: "ubuntu"
+    ami_name: "packer_{{ ansible_date_time.epoch }}"
+    tags:
+      - key: "Environment"
+        value: "Production"
+      - key: "Name"
+        value: "Mynginx"
+
+  tasks:
+    - name: Find the latest Ubuntu AMI
+      ec2_ami_facts:
+        region: "{{ aws_region }}"
+        filters:
+          virtualization-type: "hvm"
+          name: "ubuntu/images/hvm-ssd/ubuntu-jammy-22.04-amd64-server-20231207"
+          root-device-type: "ebs"
+          owner-id: "{{ aws_account_id }}"
+        sort: "creationDate"
+        sort_order: "descending"
+        limit: 1
+      register: ami_result
+
+    - name: Launch EC2 instance
+      ec2:
+        region: "{{ aws_region }}"
+        key_name: "{{ aws_key_pair }}"
+        instance_type: "{{ instance_type }}"
+        image_id: "{{ ami_result.images.0.id }}"
+        count: 1
+        vpc_subnet_id: "{{ vpc_subnet_id }}"
+        assign_public_ip: true
+        group: "{{ security_group }}"
+        instance_tags: "{{ tags }}"
+      register: ec2_result
+
+    - name: Wait for SSH to become available
+      wait_for:
+        host: "{{ ec2_result.instances[0].public_ip }}"
+        port: 22
+        delay: 10
+        timeout: 300
+
+    - name: Run shell script on the instance
+      script: nginx.sh
+      args:
+        executable: /bin/bash
+      become: true
+      become_user: "{{ ssh_username }}"
+      become_method: sudo
+
+    - name: Create AMI
+      ec2_ami:
+        region: "{{ aws_region }}"
+        instance_id: "{{ ec2_result.instances[0].id }}"
+        name: "{{ ami_name }}"
+        tags: "{{ tags }}"
+        wait: true
+      register: ami_create_result
+
+    - debug:
+        var: ami_create_result.ami_id

@@ -1,0 +1,42 @@
+- name: Build AMI with Ansible
+  hosts: localhost
+  gather_facts: false
+
+  tasks:
+    - name: Create an EC2 instance
+      community.aws.ec2:
+        instance_type: t2.micro
+        image: ami-0c7217cdde317cfec
+        region: us-east-1
+        wait: yes
+        count: 1
+        instance_tags:
+          - key: Environment
+            value: Production
+          - key: Name
+            value: Mynginx
+      register: ec2_result
+
+    - name: Wait for SSH to be available
+      wait_for:
+        host: "{{ item.public_dns_name }}"
+        port: 22
+        state: started
+      loop: "{{ ec2_result.instances }}"
+
+    - name: Run provisioning script
+      script: nginx.sh
+      become: true
+      become_user: ubuntu
+      when: ec2_result.changed
+
+    - name: Create an AMI from the instance
+      ec2_ami:
+        instance_id: "{{ ec2_result.instances[0].id }}"
+        name: "packer {{ timestamp }}"
+        wait: yes
+      register: ami_result
+
+    - name: Display the new AMI ID
+      debug:
+        var: ami_result.image_id
