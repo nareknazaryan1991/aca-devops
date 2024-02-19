@@ -1,0 +1,57 @@
+services:   							  -> Skizb                                                      
+  db:
+    image: ubuntu  						  ->  db config                                       	  
+    restart: always						
+    user: postgres				
+    secrets:
+      - db-password						  -> pass@ 
+     volumes:
+      - db-data:/var/lib/postgresql/data			  -> vortexic e vekalu data
+    environment:						  -> mijavayr@
+      - POSTGRES_DB=example					  -> data  i  anvanum e talis   examole
+      - POSTGRES_PASSWORD_FILE=/run/secrets/db-password		  -> cuyc e talis texamas@  data i passi tex@
+    expose:
+      - 5432	  						  ->  5432 by default port vor@ lsuma PostgreSQL  i datan 
+    networks:
+      - backnet						
+    healthcheck:						  ->  stuguma conteyneri  ashxatanq@
+      test: [ "CMD", "pg_isready" ]        			  -> hramaner@ vorov petq e stugi  vortex  "pg_isready"  stugum e @ndunum e PostgreSQL i server@i miacum@
+      interval: 10s						  -> amen 10s  stugeluya ashxatanqi vichak@ 
+      timeout: 5s						  -> ete amen 5s  ch@stacav "pg_isready"  patasxan@  khamari vor chiashxatum 
+      retries: 5						  -> cuyc e talis qani angamic heto lirajeq k@hamari chashxatox 
+
+  backend:							  
+    build:							  
+      context: backend						  -> местоположение сборки образа Docker. 
+      target: builder						  -> цель сборки
+    restart: always						  
+    secrets:
+      - db-password
+    ports:
+      - 8000:8000
+    networks:
+      - frontnet
+    depends_on:
+      db:
+        condition: service_healthy				   -> Эта конфигурация предписывает Docker запускать backendслужбу только после того, как dbона станет работоспособной,
+
+  proxy:
+    context: proxy
+    restart: always
+    ports:
+      - 80:80
+    networks:
+      - frontnet
+    depends_on: 
+      db:
+        condition: service_healthy
+
+volumes:
+  db-data:
+
+secrets:
+  db-password:
+    file: db/password.txt
+
+networks:
+  frontnet:

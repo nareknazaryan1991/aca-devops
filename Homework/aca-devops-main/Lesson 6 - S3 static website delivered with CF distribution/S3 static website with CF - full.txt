@@ -1,0 +1,98 @@
+
+Homework:
+Create hosted zone on route53 for name-surname.devopsaca.site domain (f.e. gabovyan), send the ns records and name-surname to the thread of this meesage
+Create s3 bucket with the domain name
+Create cloudfront distribution with s3 origin
+Create route53 records to point domain to the cf distribution
+Put simple ibdex.html file to the bucket
+
+Source: https://towardsaws.com/how-to-add-a-domain-with-amazon-route-53-fc4452fa2b60 
+
+1. Route 53 -> Create hosted zone
+Domain name = lusine-avanesyan.devopsaca.site
+It created 2 records, NS and SOA.
+NS record has the following DNS servers as value:
+ns-245.awsdns-30.com.
+ns-1330.awsdns-38.org.
+ns-1563.awsdns-03.co.uk.
+ns-543.awsdns-03.net.
+
+
+2. S3 -> Create bucket with the same name 
+lusine-avanesyan.devopsaca.site
+
+with public access on
+
+2a) upload simple index.html file as if it is a static website
+2b) go to properties -> static website -> enable
+2c) policy
+{
+    "Version": "2012-10-17",
+    "Id": "Policy1700851382479",
+    "Statement": [
+        {
+            "Sid": "Stmt1700851380445",
+            "Effect": "Allow",
+            "Principal": "*",
+            "Action": "s3:GetObject",
+            "Resource": [
+                "arn:aws:s3:::lusine-avanesyan.devopsaca.site",
+                "arn:aws:s3:::lusine-avanesyan.devopsaca.site/*"
+            ]
+        }
+    ]
+}
+
+3. Make sure that the website is hosted on S3 successfully
+http://lusine-avanesyan.devopsaca.site.s3-website-us-east-1.amazonaws.com/
+
+4. CloudFront -> Create distribution
+origin = S3
+changed to website origin
+click create
+started Deploying
+
+5. Make sure that the website is deployed successfully
+http://d1c2w5ld7eyuv5.cloudfront.net
+
+
+6. AWS Certificate Manager -> Choose the same region us-west1 -> Request 
+Domain name =  lusine-avanesyan.devopsaca.site
+the other options remain as they are by default
+
+7. After certificate is created -> click on the certificate itself -> Create Records in Route53 -> Create Record
+It creates a CNAME record with a subdomain, but this is under the certificate. Also adds it into the Route53 records.
+After a few minutes, the certificate becomes Issued.
+
+8. CloudFront -> Distribution -> Settings
+8a) Add Alternate domain name = lusine-avanesyan.devopsaca.site
+8b) Add SSL Certificate -> the one just created
+8c) Default root object = index.html
+
+
+9. Route53 -> click on lusine-avanesyan.devopsaca.site -> Create Record
+add A record, so that the root domain refers to the alias to CloudFront d1c2w5ld7eyuv5.cloudfront.net
+
+Record name = empty (so that we have root domain)
+Record Type = A
+Alias = enabled
+Route Traffic to = Alias to CloudFront distribution
+Distribution = d1c2w5ld7eyuv5.cloudfront.net
+
+7. Check that the website already opened CloudFront's content:
+http://lusine-avanesyan.devopsaca.site
+
+
+
+
+
+Conclusion about result:
+1. I created my static website in S3, publicly available
+http://lusine-avanesyan.devopsaca.site.s3-website-us-east-1.amazonaws.com/
+2. Then I wanted to host it in CloudFront to make it without any latencies for the whole world. 
+CloudFront deployed it here:
+http://d1c2w5ld7eyuv5.cloudfront.net/
+3. As I have my own domain lusine-avanesyan.devopsaca.site, I want my website to open under it.
+That's why I open Route53, I created a DNS A record with Alias to CloudFront domain.
+And after that my website in CloudFront is being available under this domain as well:
+http://lusine-avanesyan.devopsaca.site/

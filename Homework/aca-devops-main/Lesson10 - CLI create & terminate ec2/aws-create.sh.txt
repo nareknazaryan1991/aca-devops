@@ -1,0 +1,46 @@
+#!/bin/bash
+
+AWS_REG="us-east-1"
+
+# Create vpc
+echo "Creating VPC..."
+vpc_id=$(aws ec2 create-vpc --cidr-block 10.0.0.0/16 --region $AWS_REG --output json | jq -r '.Vpc.VpcId')
+echo "VPC: $vpc_id"
+
+
+# Create internet gateway
+echo "Creating Internet Gateway..."
+igw_id=$(aws ec2 create-internet-gateway --region $AWS_REG --output json | jq -r '.InternetGateway.InternetGatewayId')
+echo "Internet Gateway: $igw_id"
+
+# Attach internet gateway to VPC
+echo "Attaching Internet Gateway to VPC..."
+aws ec2 attach-internet-gateway --vpc-id $vpc_id --internet-gateway-id $igw_id --region $AWS_REG
+
+# Create a subnet
+echo "Creating Subnet..."
+subnet_id=$(aws ec2 create-subnet --vpc-id $vpc_id --cidr-block 10.0.0.0/24 --region $AWS_REG --output json | jq -r '.Subnet.SubnetId')
+echo
+
+# Create a route table
+echo "Creating Route Table..."
+rtb_id=$(aws ec2 create-route-table --vpc-id $vpc_id --region $AWS_REG --output json | jq -r '.RouteTable.RouteTableId')
+
+# Associate the route table with the subnet
+echo "Associating Route Table with Subnet..."
+aws ec2 associate-route-table --subnet-id $subnet_id --route-table-id $rtb_id --region $AWS_REG
+
+# Create a route to the internet through the internet gateway
+aws ec2 create-route --route-table-id $rtb_id --destination-cidr-block 0.0.0.0/0 --gateway-id $igw_id --region $AWS_REG
+
+# Launch EC2 instance
+echo "Launching EC2 instance..."
+aws ec2 run-instances \
+  --image-id ami-0fc5d935ebf8bc3bc   \
+  --instance-type t2.micro \
+  --key-name "lus-key2" \
+  --subnet-id $subnet_id \
+  --region $AWS_REG
+
+echo "Keccess!!! Script execution completed!"
+

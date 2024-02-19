@@ -1,0 +1,19 @@
+homework
+1. create github repo for infra
+2. push Homework script to the repo
+3. write workflow to run the script(manual trigger)
+4. * use AWS credentials as Github secrets
+
+
+
+1. Created Repository in GitHub
+https://github.com/LusineAvanesyan/infra
+2. git clone https://github.com/LusineAvanesyan/infra
+into my local comp's desktop
+3. GitHub -> Actions -> Get Started with GitHub Acitons -> Simple Workflow
+4. Commited aws-delete.sh file into the repo
+5. Configured yml file
+
+6. GitHub -> Settings -> Secrets and variables -> Repository secrets
+Add AWS_ACCESS_KEY_ID
+and AWS_SECRET_ACCESS_KEY

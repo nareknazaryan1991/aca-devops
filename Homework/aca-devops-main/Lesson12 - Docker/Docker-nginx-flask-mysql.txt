@@ -1,0 +1,92 @@
+Classwork:
+1. choose the project from Repo which contains front+backend+db services
+2. for example: https://github.com/docker/awesome-compose/tree/master/nginx-flask-mysql
+3. install docker-compose on linux
+4. create docker-compose environment from chosen project
+
+
+1. AWS -> EC2
+already installed docker.io on it
+
+2. SSH to ec2 from my local ubuntu
+
+3. Clone the repository
+git clone https://github.com/docker/awesome-compose.git
+
+
+4.Install docker compose
+
+### Docker and docker compose prerequisites
+sudo apt-get install curl
+sudo apt-get install gnupg
+sudo apt-get install ca-certificates
+sudo apt-get install lsb-release
+
+### Download the docker gpg file to Ubuntu
+sudo mkdir -p /etc/apt/keyrings
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+
+### Add Docker and docker compose support to the Ubuntu's packages list
+echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/sudo apt-get install docker-ce docker-ce-cli containerd.io docker-compose-pluginsudo apt-get install docker-ce docker-ce-cli containerd.io docker-compose-pluginlinux/ubuntu   $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+
+
+sudo apt-get update
+ 
+### Install docker and docker compose on Ubuntu
+sudo apt-get install docker-ce docker-ce-cli containerd.io docker-compose-plugin
+ 
+### Verify the Docker and docker compose install on Ubuntu
+sudo docker run hello-world
+
+
+5. Add my current user into docker user groups
+sudo usermod -aG docker ubuntu
+
+#logout and login back
+exit
+ssh -i "lus-key2.pem" ubuntu@ec2-3-85-28-16.compute-1.amazonaws.com
+
+# This command will display the groups your user belongs to, and you should see docker in the list.
+groups
+
+
+6. Go to the directory where we need to run the docker compose
+cd awesome-compose/nginx-flask-mysql/
+sudo docker compose up -d
+
+from the first time, it did not work, needed to run the following commands:
+
+sudo apt-get update
+sudo apt-get install apt-transport-https ca-certificates curl software-properties-common
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
+sudo apt-get update
+sudo apt-get install docker-ce docker-ce-cli containerd.io
+sudo systemctl start docker
+sudo systemctl enable docker
+
+# and again 
+sudo docker compose down
+sudo docker system prune -a
+sudo docker compose down
+sudo docker compose up -d
+sudo docker ps
+
+
+Result:
+ Network nginx-flask-mysql_backnet      Created                                                                  0.1s
+ ✔ Network nginx-flask-mysql_frontnet     Created                                                                  0.1s
+ ✔ Volume "nginx-flask-mysql_db-data"     Created                                                                  0.0s
+ ✔ Container nginx-flask-mysql-db-1       Healthy                                                                  0.1s
+ ✔ Container nginx-flask-mysql-backend-1  Started                                                                  0.1s
+ ✔ Container nginx-flask-mysql-proxy-1    Created
+
+
+
+7. When all the services are running, just open the ec2 with IP and make sure that the default nginx page is opening. 
+
+
+P.S.
+8*. At some point I have edited the requirements file in the backend folder, and replaced with the following:
+Flask==2.2.2
+Werkzeug==2.2.2
+mysql-connector==2.2.9

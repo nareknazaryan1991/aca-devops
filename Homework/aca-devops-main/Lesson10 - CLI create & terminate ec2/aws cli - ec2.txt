@@ -1,0 +1,79 @@
+1. on my local Ubuntu ->
+ sudo apt install awscli
+
+2. IAM -> Create IAM user in AWS -> lusd
+- do not check the checkbox for console access
+- attach policies directly -> AdministratorAccess
+- create user
+- view user
+- create access key -> CLI
+  Created access keys at the end and downloaded access keys in csv format into my local comp
+
+3. on my local Ubuntu -> 
+aws configure
+and it starts asking all the things needed to set up and login
+
+AWS Access Key ID [None]: AKIAWMDXPFTAA7ZWV
+AWS Secret Access Key [None]: hOOWNk1erwrjvEzyZdnX7+kwMcgwijuSiasW
+Default region name [None]: us-east-1
+Default output format [None]: json
+
+4. aws sts get-caller-identity
+by this command, we check whether the CLI is configured properly, the output is the following
+
+{
+    "UserId": "AIDAWMDXPFTAKM6DCK2L",
+    "Account": "438337219776",
+    "Arn": "arn:aws:iam::438337219776:user/lusd"
+}
+
+5. Create a vpc with this command:
+ aws ec2 create-vpc --cidr-block 10.0.0.0/16 --region us-east-1
+
+It creates and returns a json where all the parameters are shown:
+
+{
+    "Vpc": {
+        "CidrBlock": "10.0.0.0/16",
+        "DhcpOptionsId": "dopt-0b3f90f63bf153d27",
+        "State": "pending",
+        "VpcId": "vpc-096d52a901afd0897",
+        "OwnerId": "438337219776",
+        "InstanceTenancy": "default",
+        "Ipv6CidrBlockAssociationSet": [],
+        "CidrBlockAssociationSet": [
+            {
+                "AssociationId": "vpc-cidr-assoc-05358779bd579267d",
+                "CidrBlock": "10.0.0.0/16",
+                "CidrBlockState": {
+                    "State": "associated"
+                }
+            }
+        ],
+        "IsDefault": false
+    }
+}
+
+
+6. aws ec2 describe-vpcs
+
+7. Sometimes the time fails syncronization with the world time and UTC, and that is why it is strating authentication failure.
+To resolve the issue, here is the command:
+sudo apt-get install systemd-timesyncd
+timedatectl
+
+8. AWS -> add tag for the default VPC, named 'permanent'
+add tag named permanent also for subnet, security group and ec2
+
+9. On my local Ubuntu, prepared 2 bash script files. One for creating vpc, subnet, and ec2, and the other one is for deleting all those items that are not tagged. 
+vim asw-create.sh
+chmod 700 aws-create.sh
+
+vim aws-delete.sh
+chmod 700 aws-delete.sh
+
+
+10. Running the bash files
+./aws-create.sh
+./aws-delete.sh
+

@@ -1,0 +1,112 @@
+Homework:
+Install docker on ec2 ubuntu
+Write Dockerfile for ubuntu latest image, nginx installed and simple nginx conf file added to enabled sites directory.
+Build the image
+Run a container from created dockerfile
+"Login" to conrainer, install and run htop command
+
+
+Solution:
+1. aws -> ec2 -> Launch instance
+2. SSH to that ec2 from my local ubuntu
+$ ssh -i "lus-key2.pem" ubuntu@ec2-54-147-4-4.compute-1.amazonaws.com
+
+3. Install docker
+$ sudo apt update
+$ sudo apt install docker.io
+
+4. Create repository app folder, and inside, the index.html file, myconf.conf file and Dockerfile.
+$ mkdir app
+$ cd app
+$ touch index.html
+$ touch myconf.conf
+$ touch Dockerfile
+
+5. Write content of index.html
+$ vim index.html
+
+<h1>Inch ka chka</h1>
+
+6. Write content of myconf.conf
+$ vim myconf.conf
+
+server {
+  listen 80;
+  server_name _;
+
+  root /var/www/html;
+
+  index index.html;
+
+  location / {
+     try_files $uri $uri/ =404;
+  }
+}
+
+7. Write content of Dockerfile
+$ vim Dockerfile
+
+FROM ubuntu:latest
+
+# Install nginx
+RUN apt-get update && apt-get install -y nginx
+
+# Substitute default conf file with mine and add the main applicaton html file
+RUN rm -f /etc/nginx/sites-enabled/default
+COPY myconf.conf /etc/nginx/sites-enabled/
+COPY index.html /var/www/html/
+
+# Expose port 80
+EXPOSE 80
+
+# Start Nginx when the container starts
+CMD ["nginx", "-g", "daemon off;"]
+
+
+8. Make Docker image
+$ sudo docker build -t webapp:1.4 ~/app
+$ sudo docker images
+
+
+9. Run docker container
+$ sudo docker run --name lus -d -p 9000:80 webapp:1.4
+$ sudo docker ps
+
+
+
+10. ec2 -> Security -> Security Group -> Add Inbound Rule
+Custom TCP 9000 to 0.0.0.0/0
+Custom TCP 80 to  0.0.0.0/0
+
+11. Open the browser to check
+http://54.147.4.4:9000
+Make sure you see a white page with a text "Inch ka chka".
+
+
+12. Login to dockerhub, to copy the image there.
+sudo docker login
+
+13. First, we need to tag the docker image with the apppropriate dockerhub username and repo name, and then push it.
+sudo docker tag webapp:1.4 avanesyanlusine/my-nginx-web:1.4
+sudo docker push avanesyanlusine/my-nginx-web:1.4
+
+
+14. Enter into the container and run htop command to see the running processes
+$ sudo docker exec -it 7dd84d2fac13 /bin/bash 
+$ apt update
+$ apt install htop
+$ htop
+$ exit
+
+
+
+
+# Troubleshooting
+sudo apt install net-tools
+sudo net-stat -nltp
+sudo docker system prune -a
+docker exec -it lus nginx -t
+docker inspect lus
+
+
+

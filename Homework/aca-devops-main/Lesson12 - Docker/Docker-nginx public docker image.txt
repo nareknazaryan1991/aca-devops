@@ -1,0 +1,31 @@
+1. AWS -> EC2 -> Launch instance
+2. SSH to that ec2 from my local ubuntu
+ssh -i "lus-key2.pem" ubuntu@ec2-3-85-28-16.compute-1.amazonaws.com
+
+3. Install docker. As my Ubuntu is 22.04.1, I need to install docker.io
+sudo apt install docker.io
+
+4. Download from Docker Registry the nginx docker image, the 1.25 version
+sudo docker pull nginx:1.25
+
+sudo docker images
+
+REPOSITORY   TAG       IMAGE ID       CREATED       SIZE
+nginx        1.25      a6bd71f48f68   3 weeks ago   187MB
+
+5. Let's run the docker image, so that it becomes a container
+docker run nginx:1.25
+
+6. ec2 -> connect -> to see the running contains
+sudo docker ps
+
+
+CONTAINER ID   IMAGE        COMMAND                  CREATED         STATUS         PORTS     NAMES
+6d016ab5f4bc   nginx:1.25   "/docker-entrypoint.…"   2 minutes ago   Up 2 minutes   80/tcp    vibrant_greider
+
+
+
+7.If you want to not see the logs in terminal and run the docker container in the background, add -d
+ sudo docker run -d nginx:1.25
+
+
